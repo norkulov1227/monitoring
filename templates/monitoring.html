@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" integrity="sha384-1BmE4kWBq78iYhFldvKuhfTAU6auU8tT94WrHftjDbrCEXSU1oBoqyl2QvZ6jIW3" crossorigin="anonymous">
+    <title>Document</title>
+    <style>
+        body {
+            background-color: #f8f9fa;
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .monitoring {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f0f0f0; /* Light gray background */
+        }
+        .monitoring strong {
+            margin-right: 10px;
+        }
+        .monitoring hr {
+            margin: 10px 0;
+        }
+        .text-success {
+            color: green;
+        }
+        .text-danger {
+            color: red;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="links">
+            <a class="btn btn-primary" href="{% url 'home:filter' %}">Filter</a>
+            <a class="btn btn-primary" href="{% url 'home:home' %}">Asosiy menyu</a>
+        </div>
+        <div class="data-summary">
+            <strong class="text-success">Приход:</strong> <span id="total_income">{{ total }}</span> | <strong class="text-danger">Расход:</strong> <span id="total_expense">{{ expence }}</span>
+        </div>
+        {% for day in grouped_data %}
+            <div class="monitoring">
+                <strong>SANA:</strong> {{ day.day }} 
+                <strong style="padding: 20px;">|</strong>
+                <strong class="text-success">KIRIM:</strong>
+                {% if day.total_income %}
+                    <span class="text-success" id="income-{{ day.day|date:"Ymd" }}">+{{ day.total_income }}</span>
+                {% else %}
+                    <span class="text-success">0</span>
+                {% endif %} 
+                <strong style="padding: 20px;">|</strong>
+                <strong class="text-danger" >CHIQIM:</strong>
+                {% if day.total_expense %}
+                    <span class="text-danger" id="expense-{{ day.day|date:"Ymd" }}">-{{ day.total_expense }}</span>
+                {% else %}
+                    <span class="text-danger">0</span>
+                {% endif %}
+                <hr>
+                {% for monitoring in monitoring %}
+                    {% if day.day|date:"m/d/Y" == monitoring.created_at|date:"m/d/Y" %}
+                        {{ monitoring.comment }} 
+                        <strong style="padding: 20px;">|</strong>
+                        {% if monitoring.status == "income" %}
+                            <span class="text-success" id="price-{{ monitoring.id }}">+{{ monitoring.price }}</span>
+                            <strong style="padding: 20px;">|</strong>
+                        {% else %}
+                            <span class="text-danger" id="price-{{ monitoring.id }}">-{{ monitoring.price }}</span>
+                            <strong style="padding: 20px;">|</strong>
+                        {% endif %} 
+                        {% if monitoring.payment_type == "card" %}
+                            {{ "Karta" }}
+                        {% else %}
+                            {{ "Naqt" }}
+                        {% endif %}
+                        <strong style="padding: 20px;">|</strong>
+                        {{ monitoring.created_at|date:"H:i" }}
+                        <hr>
+                    {% endif %}
+                {% endfor %}
+            </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        function formatPrice(price) {
+            return price.replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+        }
+
+        var totalIncome = document.getElementById('total_income');
+        if (totalIncome) {
+            totalIncome.textContent = formatPrice(totalIncome.textContent);
+        }
+
+        var totalExpense = document.getElementById('total_expense');
+        if (totalExpense) {
+            totalExpense.textContent = formatPrice(totalExpense.textContent);
+        }
+
+        {% for day in grouped_data %}
+            {% if day.total_income %}
+                var incomeElement = document.getElementById('income-{{ day.day|date:"Ymd" }}');
+                if (incomeElement) {
+                    incomeElement.textContent = formatPrice(incomeElement.textContent);
+                }
+            {% endif %}
+            {% if day.total_expense %}
+                var expenseElement = document.getElementById('expense-{{ day.day|date:"Ymd" }}');
+                if (expenseElement) {
+                    expenseElement.textContent = formatPrice(expenseElement.textContent);
+                }
+            {% endif %}
+        {% endfor %}
+
+        {% for monitoring in monitoring %}
+            var priceElement = document.getElementById('price-{{ monitoring.id }}');
+            if (priceElement) {
+                priceElement.textContent = formatPrice(priceElement.textContent);
+            }
+        {% endfor %}
+    </script>
+</body>
+</html>
